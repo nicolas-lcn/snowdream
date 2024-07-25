@@ -19,6 +19,8 @@ namespace Viewer
 
 		void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
+		inline VkExtent2D getExtent(){return {width, height};}
+
 		Window(const Window& ) = delete;
 		Window &operator=(const Window&) = delete;
 

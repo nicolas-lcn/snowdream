@@ -2,6 +2,11 @@
 #define APPLICATION_H
 
 #include "window.h"
+#include "pipeline.h"
+#include "swapchain.h"
+
+#include <memory>
+#include <vector>
 
 namespace Vengine
 {
@@ -12,21 +17,35 @@ namespace Vengine
 		static constexpr uint32_t HEIGHT = 600;
 
 	public:
-		App(): window(Viewer::Window(WIDTH, HEIGHT, "Snow Dream")){};
-		~App(){};
+		App();
+		~App();
+
+		 // Not copyable or movable
+		App(const App &) = delete;
+		void operator=(const App &) = delete;
+		App(App &&) = delete;
+		App &operator=(App &&) = delete;
 
 		void run();
 
 
 	private:
 		
-		void initVulkan(){};
-
 		void mainLoop();
+
+		void createPipelineLayout();
+		void createPipeline();
+		void createCommandBuffers();
+		void drawFrame();
 
 	private:
 
 		Viewer::Window window;
+		Device device;
+		SwapChain swapChain;
+		std::unique_ptr<Pipeline> pipeline;
+		VkPipelineLayout pipelineLayout;
+		std::vector<VkCommandBuffer> commandBuffers	;	
 
 	
 

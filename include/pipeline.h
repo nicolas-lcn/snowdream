@@ -1,13 +1,58 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H 
 
-class Pipeline
+#include <string>
+#include <vector>
+#include <memory>
+
+
+#include "device.h"
+
+namespace Vengine
 {
-public:
-	Pipeline();
-	~Pipeline();
+	struct ConfigurationInfo
+	{
+		VkViewport viewport;
+		VkRect2D scissor;
+		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
+		VkPipelineRasterizationStateCreateInfo rasterizationInfo;
+		VkPipelineMultisampleStateCreateInfo multisampleInfo;
+		VkPipelineColorBlendAttachmentState colorBlendAttachment;
+		VkPipelineColorBlendStateCreateInfo colorBlendInfo;
+		VkPipelineDepthStencilStateCreateInfo depthStencilInfo;
+		VkPipelineLayout pipelineLayout = nullptr;
+		VkRenderPass renderPass = nullptr;
+		uint32_t subpass = 0;
+	};
+
+	class Pipeline
+	{
+	public:
+		Pipeline(Vengine::Device& device, const std::string& vertexFilePath, const std::string& fragmentFilePath, const Vengine::ConfigurationInfo& configInfo);
+		~Pipeline();
+
+		Pipeline(const Pipeline&) = delete;
+		Pipeline &operator=(const Pipeline&) = delete;
 	
-};
+		static ConfigurationInfo defaultConfig(uint32_t width, uint32_t height);
+		void bind(VkCommandBuffer commandBuffer);
+	private:
+		std::vector<char> loadShader(const std::string& filePath);
+		void createGraphicsPipeline(const std::string& vertexFilePath, const std::string& fragmentFilePath, const ConfigurationInfo& configInfo);
+		void createShaderModule(const std::vector<char> & buffer, VkShaderModule *module);
+
+	private:
+		
+		VkShaderModule vertexModule;
+		VkShaderModule fragmentModule;
+
+		Vengine::Device& device;
+		VkPipeline graphicsPipeline;
+
+	};
+
+	
+}
 
 
 #endif //PIPELINE_H
