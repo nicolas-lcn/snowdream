@@ -20,6 +20,8 @@ namespace Viewer
 		void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 
 		inline VkExtent2D getExtent(){return {width, height};}
+		inline bool isResized(){ return framebufferResized;}
+		inline void resetFlags() { framebufferResized = false;}
 
 		Window(const Window& ) = delete;
 		Window &operator=(const Window&) = delete;
@@ -28,9 +30,13 @@ namespace Viewer
 		void initWindow();
 		void cleanup();
 
+		static void resize(GLFWwindow* window, int width, int height);
+
 		GLFWwindow* window;
 		uint32_t width, height;
 		std::string name;
+
+		bool framebufferResized = false;
 
 	
 	};

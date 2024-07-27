@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cassert>
 
+#include "model.h"
 
 
 std::vector<char> Vengine::Pipeline::loadShader(const std::string& filePath) 
@@ -79,19 +80,17 @@ void Vengine::Pipeline::createGraphicsPipeline(const std::string& vertexFilePath
 	shaderStages[1].pNext = NULL;
 	shaderStages[1].pSpecializationInfo = nullptr;
 	
+
+	auto bindingDescriptions = Vengine::Model::Vertex::getBindingDescriptions();
+	auto attributeDescriptions = Vengine::Model::Vertex::getAttributeDescriptions();
+	
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-	vertexInputInfo.pVertexBindingDescriptions = nullptr;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
-	VkPipelineViewportStateCreateInfo viewportInfo{};
-	viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportInfo.viewportCount = 1;
-	viewportInfo.pViewports = &configInfo.viewport;
-	viewportInfo.scissorCount = 1;
-	viewportInfo.pScissors = &configInfo.scissor;
 
 	VkGraphicsPipelineCreateInfo pipelineInfo{};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -99,13 +98,13 @@ void Vengine::Pipeline::createGraphicsPipeline(const std::string& vertexFilePath
 	pipelineInfo.pStages = shaderStages;
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
 	pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
-	pipelineInfo.pViewportState = &viewportInfo;
+	pipelineInfo.pViewportState = &configInfo.viewportInfo;
 	pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
 	pipelineInfo.pMultisampleState  = &configInfo.multisampleInfo;
 
 	pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
 	pipelineInfo.pDepthStencilState = &configInfo.depthStencilInfo;
-	pipelineInfo.pDynamicState = nullptr;
+	pipelineInfo.pDynamicState = &configInfo.dynamicStateInfo;
 
 	pipelineInfo.layout = configInfo.pipelineLayout;
 	pipelineInfo.renderPass = configInfo.renderPass;
@@ -132,26 +131,20 @@ void Vengine::Pipeline::createShaderModule(const std::vector<char> &buffer, VkSh
 		throw std::runtime_error("Unable to create Shader Module");
 	}
 }
-
-Vengine::ConfigurationInfo Vengine::Pipeline::defaultConfig(uint32_t width, uint32_t height) 
+void Vengine::Pipeline::defaultConfig(ConfigurationInfo& configurationInfo) 
 {
-	Vengine::ConfigurationInfo configurationInfo{};
-  	configurationInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;	
+	configurationInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;	
   	configurationInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	configurationInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 	configurationInfo.inputAssemblyInfo.pNext = NULL;
 	configurationInfo.inputAssemblyInfo.flags = 0;
 
-
-	configurationInfo.viewport.x = 0.0f;
-	configurationInfo.viewport.y = 0.0f;
-	configurationInfo.viewport.width = static_cast<float>(width);
-	configurationInfo.viewport.height = static_cast<float>(height);
-	configurationInfo.viewport.minDepth = 0.0f;
-	configurationInfo.viewport.maxDepth = 1.0f;
-
-	configurationInfo.scissor.offset = {0, 0};
-	configurationInfo.scissor.extent = {width, height}; 
+	configurationInfo.viewportInfo = VkPipelineViewportStateCreateInfo{};
+	configurationInfo.viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	configurationInfo.viewportInfo.viewportCount = 1;
+	configurationInfo.viewportInfo.pViewports = nullptr;
+	configurationInfo.viewportInfo.scissorCount = 1;
+	configurationInfo.viewportInfo.pScissors = nullptr;
 
 	configurationInfo.rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	configurationInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
@@ -167,6 +160,7 @@ Vengine::ConfigurationInfo Vengine::Pipeline::defaultConfig(uint32_t width, uint
 	configurationInfo.rasterizationInfo.pNext = NULL;
 	configurationInfo.rasterizationInfo.flags = 0;
 
+	configurationInfo.multisampleInfo = VkPipelineMultisampleStateCreateInfo{};
 	configurationInfo.multisampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	configurationInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
 	configurationInfo.multisampleInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -186,6 +180,7 @@ Vengine::ConfigurationInfo Vengine::Pipeline::defaultConfig(uint32_t width, uint
 	configurationInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  // Optional
 	configurationInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;              // Optional
 
+	configurationInfo.colorBlendInfo = VkPipelineColorBlendStateCreateInfo{};
 	configurationInfo.colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	configurationInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
 	configurationInfo.colorBlendInfo.logicOp = VK_LOGIC_OP_COPY;  // Optional
@@ -196,6 +191,7 @@ Vengine::ConfigurationInfo Vengine::Pipeline::defaultConfig(uint32_t width, uint
 	configurationInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
 	configurationInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
 
+	configurationInfo.depthStencilInfo = VkPipelineDepthStencilStateCreateInfo{};
 	configurationInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	configurationInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
 	configurationInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
@@ -207,6 +203,15 @@ Vengine::ConfigurationInfo Vengine::Pipeline::defaultConfig(uint32_t width, uint
 	configurationInfo.depthStencilInfo.front = {};  // Optional
 	configurationInfo.depthStencilInfo.back = {};   // 
 
-	return configurationInfo;
+	configurationInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+	configurationInfo.dynamicStateInfo = VkPipelineDynamicStateCreateInfo{};
+	configurationInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	configurationInfo.dynamicStateInfo.pDynamicStates = configurationInfo.dynamicStateEnables.data();
+	configurationInfo.dynamicStateInfo.dynamicStateCount =
+	 static_cast<uint32_t>(configurationInfo.dynamicStateEnables.size());
+	configurationInfo.dynamicStateInfo.flags = 0;
+	configurationInfo.dynamicStateInfo.pNext = NULL;
+
+
 }
 

@@ -4,6 +4,7 @@
 // std lib headers
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "device.h"
 
@@ -14,10 +15,12 @@ namespace Vengine {
 	  static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 	  SwapChain(Vengine::Device &deviceRef, VkExtent2D windowExtent);
+	  SwapChain(Vengine::Device &deviceRef, VkExtent2D windowExtent, std::shared_ptr<SwapChain> previous);
+	  
 	  ~SwapChain();
 
 	  SwapChain(const SwapChain &) = delete;
-	  void operator=(const SwapChain &) = delete;
+	  SwapChain& operator=(const SwapChain &) = delete;
 
 	  VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
 	  VkRenderPass getRenderPass() { return renderPass; }
@@ -37,6 +40,7 @@ namespace Vengine {
 	  VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
 	 private:
+	  void init();
 	  void createSwapChain();
 	  void createImageViews();
 	  void createDepthResources();
@@ -50,6 +54,9 @@ namespace Vengine {
 	  VkPresentModeKHR chooseSwapPresentMode(
 	      const std::vector<VkPresentModeKHR> &availablePresentModes);
 	  VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+
+
+
 
 	  VkFormat swapChainImageFormat;
 	  VkExtent2D swapChainExtent;
@@ -67,6 +74,7 @@ namespace Vengine {
 	  VkExtent2D windowExtent;
 
 	  VkSwapchainKHR swapChain;
+	  std::shared_ptr<SwapChain> previous;
 
 	  std::vector<VkSemaphore> imageAvailableSemaphores;
 	  std::vector<VkSemaphore> renderFinishedSemaphores;

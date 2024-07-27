@@ -21,8 +21,10 @@ void Viewer::Window::initWindow()
 	glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     this->window = glfwCreateWindow(width, height, name.c_str() , nullptr, nullptr);
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, &Window::resize);
 
 }
 
@@ -36,4 +38,12 @@ void Viewer::Window::cleanup()
 {
 	glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+void Viewer::Window::resize(GLFWwindow* window, int width, int height)
+{
+	auto wind = reinterpret_cast<Viewer::Window*>(glfwGetWindowUserPointer(window));
+	wind->framebufferResized = true;
+	wind->width = static_cast<uint32_t>(width);
+	wind->height = static_cast<uint32_t>(height);
 }

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <vector>
+#include "model.h"
 
 namespace Vengine
 {
@@ -22,7 +23,7 @@ namespace Vengine
 
 		 // Not copyable or movable
 		App(const App &) = delete;
-		void operator=(const App &) = delete;
+		App& operator=(const App &) = delete;
 		App(App &&) = delete;
 		App &operator=(App &&) = delete;
 
@@ -33,21 +34,25 @@ namespace Vengine
 		
 		void mainLoop();
 
+		void loadModels();
 		void createPipelineLayout();
 		void createPipeline();
 		void createCommandBuffers();
+		void freeCommandBuffers();
 		void drawFrame();
+		void recreateSwapChain();
+		void recordCommandBuffer(int imageIndex);
 
 	private:
 
 		Viewer::Window window;
 		Device device;
-		SwapChain swapChain;
+		std::unique_ptr<SwapChain> swapChain;
 		std::unique_ptr<Pipeline> pipeline;
 		VkPipelineLayout pipelineLayout;
 		std::vector<VkCommandBuffer> commandBuffers	;	
 
-	
+		std::unique_ptr<Vengine::Model> model;
 
 	};
 }
