@@ -8,6 +8,9 @@
 #include <memory>
 #include <vector>
 #include "model.h"
+#include "renderer.h"
+
+
 
 namespace Vengine
 {
@@ -37,20 +40,16 @@ namespace Vengine
 		void loadModels();
 		void createPipelineLayout();
 		void createPipeline();
-		void createCommandBuffers();
-		void freeCommandBuffers();
-		void drawFrame();
-		void recreateSwapChain();
-		void recordCommandBuffer(int imageIndex);
 
 	private:
 
 		Viewer::Window window;
 		Device device;
-		std::unique_ptr<SwapChain> swapChain;
+		
+		Renderer renderer;
+
 		std::unique_ptr<Pipeline> pipeline;
 		VkPipelineLayout pipelineLayout;
-		std::vector<VkCommandBuffer> commandBuffers	;	
 
 		std::unique_ptr<Vengine::Model> model;
 
